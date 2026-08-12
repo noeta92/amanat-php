@@ -1,0 +1,91 @@
+<?php
+
+use yii\helpers\Html;
+use yii\widgets\ActiveForm;
+use kartik\date\DatePicker;
+use kartik\select2\Select2;
+
+/** @var yii\web\View $this */
+/** @var common\models\MonitoringHonorarium $model */
+/** @var yii\widgets\ActiveForm $form */
+
+$script = <<< JS
+      $("#jenis").on("change", function() {
+        var dataJenis = $('input:radio[name="MonitoringHonorarium[jenisSurat]"]:checked').val()
+        $.post("index.php?r=monitoring-perjadin/get-surat&jenis="+dataJenis, function(data){
+            $("#dataSurat").html(data);
+            });   
+    }); 
+JS;
+$this->registerJs($script);
+
+?>
+
+<div class="monitoring-honorarium-form">
+
+    <div class="card">
+        <div class ="card-body">
+        <?php $form = ActiveForm::begin(); ?>
+
+        <div class = "row">
+        
+            <?= $form->field($model, 'idPegawai')->widget(Select2::classname(), [
+                        'data' => $pegawai,
+                        'options' => ['placeholder' => 'Pilih Pegawai'],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ],
+                    ])->label('Pilih Pegawai'); ?>
+
+            <?php // $form->field($model, 'jenisSurat')->textInput() ?>
+            <?= $form->field($model, 'jenisSurat')->radioList( [0=>'Surat Keluar', 1 => 'Surat Masuk'], 
+            ['id'=>'jenis']); ?>
+
+            <?= $form->field($model, 'idSurat')->widget(Select2::classname(), [
+                        'data' => $surat,
+                        'options' => ['placeholder' => 'Pilih Surat', 'id' => 'dataSurat'],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ],
+                    ])->label('Dasar Surat'); ?>
+
+            <?= $form->field($model, 'tujuan')->textInput(['maxlength' => true])->label('Perihal') ?>
+            
+            <?= $form->field($model, 'tempat')->textInput(['maxlength' => true]) ?>
+
+        
+            </div>
+
+            <div class="row">
+                <div class ="col-md-6">
+
+                    <?= '<label class="form-label">Tanggal</label>' ?>
+
+                    <?= DatePicker::widget([
+                                'model' => $model, 
+                                'attribute' => 'tanggal',
+                                'type' => DatePicker::TYPE_COMPONENT_APPEND,
+                                'options' => ['placeholder' => 'Pililh Tanggal', 'autocomplete' => 'off'],
+                                'pluginOptions' => [
+                                    'autoclose' => true,
+                                    'format' => 'yyyy-mm-dd',
+                                    'todayHighlight' => true
+                                ],
+                            ]); ?>
+                    <br>
+                    
+            
+                </div>
+
+            </div>
+
+        <br> 
+        <div class="form-group">
+            <?= Html::submitButton('Simpan', ['class' => 'btn btn-success']) ?>
+        </div>
+
+        <?php ActiveForm::end(); ?>
+        </div>
+    </div>
+
+</div>

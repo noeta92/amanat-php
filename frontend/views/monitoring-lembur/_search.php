@@ -1,0 +1,52 @@
+<?php
+
+use yii\helpers\Html;
+use yii\widgets\ActiveForm;
+
+/** @var yii\web\View $this */
+/** @var common\models\search\MonitoringLemburSearch $model */
+/** @var yii\widgets\ActiveForm $form */
+?>
+
+<div class="monitoring-lembur-search">
+
+    <?php $form = ActiveForm::begin([
+        'action' => ['index'],
+        'method' => 'get',
+        'options' => [
+            'data-pjax' => 1
+        ],
+    ]); ?>
+
+    <?= $form->field($model, 'idLembur') ?>
+
+    <?= $form->field($model, 'idPegawai') ?>
+
+    <?= $form->field($model, 'jenisSurat') ?>
+
+    <?= $form->field($model, 'idSurat') ?>
+
+    <?= $form->field($model, 'perihal') ?>
+
+    <?php // echo $form->field($model, 'tanggal_awal') ?>
+
+    <?php // echo $form->field($model, 'tanggal_akhir') ?>
+
+    <?php // echo $form->field($model, 'jenisPerjalanan') ?>
+
+    <?php // echo $form->field($model, 'tempat') ?>
+
+    <?php // echo $form->field($model, 'statusVerifikasi') ?>
+
+    <?php // echo $form->field($model, 'verifikasiBy') ?>
+
+    <?php // echo $form->field($model, 'createdOn') ?>
+
+    <div class="form-group">
+        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
+        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+    </div>
+
+    <?php ActiveForm::end(); ?>
+
+</div>

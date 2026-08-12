@@ -1,0 +1,29 @@
+foreach ($refprogramskpd1 as $keyrefprogramskpd => $valuerefprogramskpd2) {
+
+$refprogramskpd2 = new \common\models\Refprogramskpd;
+
+$refprogramskpd2->refprogramskpd_id = $valuerefprogramskpd2['refprogramskpd_id'];
+$refprogramskpd2->verifikasiaturan_id = $idVerifikasi;
+$refprogramskpd2->refbidangskpd_id = $valuerefprogramskpd2['refbidangskpd_id'];
+$refprogramskpd2->refurusan_id = $valuerefprogramskpd2['refurusan_id'];
+$refprogramskpd2->refbidang_id = $valuerefprogramskpd2['refbidang_id'];
+$refprogramskpd2->refskpd_id = $valuerefprogramskpd2['refskpd_id'];
+$refprogramskpd2->refprogramskpd_isaktif = $valuerefprogramskpd2['refprogramskpd_isaktif'];
+$refprogramskpd2->refprogram_id = $valuerefprogramskpd2['refprogram_id'];
+$refprogramskpd2->save();
+}
+
+foreach ($refkegiatanskpd1 as $keyRefkegiatanskpd => $valueRefkegiatanskpd2) {
+
+$refkegiatanskpd2 = new \common\models\Refkegiatanskpd;
+$refkegiatanskpd2->refkegiatanskpd_id = $valueRefkegiatanskpd2['refkegiatanskpd_id'];
+$refkegiatanskpd2->verifikasiaturan_id = $idVerifikasi;
+$refkegiatanskpd2->refprogramskpd_id = $valueRefkegiatanskpd2['refprogramskpd_id'];
+$refkegiatanskpd2->refurusan_id = $valueRefkegiatanskpd2['refurusan_id'];
+$refkegiatanskpd2->refbidang_id = $valueRefkegiatanskpd2['refbidang_id'];
+$refkegiatanskpd2->refskpd_id = $valueRefkegiatanskpd2['refskpd_id'];
+$refkegiatanskpd2->refkegiatanskpd_isaktif = $valueRefkegiatanskpd2['refkegiatanskpd_isaktif'];
+$refkegiatanskpd2->refkegiatan_id = $valueRefkegiatanskpd2['refkegiatan_id'];
+$refkegiatanskpd2->refprogram_id = $valueRefkegiatanskpd2['refprogram_id'];
+$refkegiatanskpd2->save();
+}
