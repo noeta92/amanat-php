@@ -4,10 +4,19 @@ Sistem informasi untuk mengelola administrasi internal instansi pemerintah daera
 
 ## ✨ Fitur Utama
 
+![alt text](amanat-dashboard.png)
+
 - **Surat-Menyurat** — pencatatan dan pengelolaan surat masuk/keluar
+![alt text](surat-masuk.png)
+
 - **Lembur** — pengajuan dan rekap jam kerja lembur pegawai
+
+![alt text](<Screenshot 2026-08-13 at 15.24.56.png>)
+
 - **Perjalanan Dinas** — pengelolaan Surat Perintah Tugas (SPT) dan perjalanan dinas pegawai
 - **Honorarium** — pencatatan dan perhitungan honorarium
+
+
 
 ## 🛠️ Tech Stack
 
