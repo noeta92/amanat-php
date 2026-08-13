@@ -55,4 +55,4 @@ vagrant/        konfigurasi Vagrant untuk dev environment
 
 ## 📄 Lisensi dan Copyright
 
-Proyek ini dilisensikan di bawah **BSD-3-Clause License**. Lihat [LICENSE.md](./LICENSE.md) untuk detail.
+Proyek ini dilisensikan di bawah **BSD-3-Clause License**. Lihat [LICENSE.md](./LICENSE.md) untuk detail. Contributed by Noeta92.
