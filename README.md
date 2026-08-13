@@ -19,40 +19,40 @@ Sistem informasi untuk mengelola administrasi internal instansi pemerintah daera
 
 Mengikuti struktur standar Yii2 Advanced Template:
 
-\`\`\`
+
 common/         konfigurasi & model yang dipakai bersama (frontend & backend)
 console/        console commands & migration database
 frontend/       aplikasi Web untuk pengguna/pegawai
 manajemen/      aplikasi Web untuk admin/pengelola
 environments/   konfigurasi berdasarkan environment (dev/prod)
 vagrant/        konfigurasi Vagrant untuk dev environment
-\`\`\`
+
 
 ## 🚀 Instalasi
 
 1. Clone repository:
-   \`\`\`bash
+   bash
    git clone https://github.com/noeta92/amanat-php.git
    cd amanat-php
-   \`\`\`
+   
 2. Install dependency via Composer:
-   \`\`\`bash
+   bash
    composer install
-   \`\`\`
-3. Inisialisasi environment (pilih \`dev\` atau \`prod\`):
-   \`\`\`bash
-   php init
-   \`\`\`
-4. Import database dari \`amanat.sql\` ke MySQL, lalu sesuaikan koneksi database di \`common/config/main-local.php\`.
-5. Jalankan migration (jika diperlukan):
-   \`\`\`bash
-   php yii migrate
-   \`\`\`
-6. **Opsional — jalankan via Docker:**
-   \`\`\`bash
-   docker-compose up -d
-   \`\`\`
 
-## 📄 Lisensi
+3. Inisialisasi environment (pilih \`dev\` atau \`prod\`):
+   bash
+   php init
+   
+4. Import database dari 'amanat.sql' ke MySQL, lalu sesuaikan koneksi database di common/config/main-local.php.
+5. Jalankan migration (jika diperlukan):
+   bash
+   php yii migrate
+   
+6. **Opsional — jalankan via Docker:**
+   bash
+   docker-compose up -d
+   
+
+## 📄 Lisensi dan Copyright
 
 Proyek ini dilisensikan di bawah **BSD-3-Clause License**. Lihat [LICENSE.md](./LICENSE.md) untuk detail.
