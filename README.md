@@ -1,60 +1,58 @@
-<p align="center">
-    <a href="https://github.com/yiisoft" target="_blank">
-        <img src="https://avatars0.githubusercontent.com/u/993323" height="100px">
-    </a>
-    <h1 align="center">Yii 2 Advanced Project Template</h1>
-    <br>
-</p>
+# 📋 AMANAT — Aplikasi Manajemen Administrasi Pemerintah Daerah
 
-Yii 2 Advanced Project Template is a skeleton [Yii 2](http://www.yiiframework.com/) application best for
-developing complex Web applications with multiple tiers.
+Sistem informasi untuk mengelola administrasi internal instansi pemerintah daerah, mencakup **Surat-Menyurat**, **Lembur**, **Perjalanan Dinas**, dan **Honorarium** dalam satu platform terintegrasi.
 
-The template includes three tiers: front end, back end, and console, each of which
-is a separate Yii application.
+## ✨ Fitur Utama
 
-The template is designed to work in a team development environment. It supports
-deploying the application in different environments.
+- **Surat-Menyurat** — pencatatan dan pengelolaan surat masuk/keluar
+- **Lembur** — pengajuan dan rekap jam kerja lembur pegawai
+- **Perjalanan Dinas** — pengelolaan Surat Perintah Tugas (SPT) dan perjalanan dinas pegawai
+- **Honorarium** — pencatatan dan perhitungan honorarium
 
-Documentation is at [docs/guide/README.md](docs/guide/README.md).
+## 🛠️ Tech Stack
 
-[![Latest Stable Version](https://img.shields.io/packagist/v/yiisoft/yii2-app-advanced.svg)](https://packagist.org/packages/yiisoft/yii2-app-advanced)
-[![Total Downloads](https://img.shields.io/packagist/dt/yiisoft/yii2-app-advanced.svg)](https://packagist.org/packages/yiisoft/yii2-app-advanced)
-[![build](https://github.com/yiisoft/yii2-app-advanced/workflows/build/badge.svg)](https://github.com/yiisoft/yii2-app-advanced/actions?query=workflow%3Abuild)
+- **Framework:** PHP — Yii 2 Framework
+- **Database:** MySQL
+- **Dev Environment:** Docker / Docker Compose, Vagrant
 
-DIRECTORY STRUCTURE
--------------------
+## 🧱 Struktur Proyek
 
-```
-common
-    config/              contains shared configurations
-    mail/                contains view files for e-mails
-    models/              contains model classes used in both backend and frontend
-    tests/               contains tests for common classes    
-console
-    config/              contains console configurations
-    controllers/         contains console controllers (commands)
-    migrations/          contains database migrations
-    models/              contains console-specific model classes
-    runtime/             contains files generated during runtime
-backend
-    assets/              contains application assets such as JavaScript and CSS
-    config/              contains backend configurations
-    controllers/         contains Web controller classes
-    models/              contains backend-specific model classes
-    runtime/             contains files generated during runtime
-    tests/               contains tests for backend application    
-    views/               contains view files for the Web application
-    web/                 contains the entry script and Web resources
-frontend
-    assets/              contains application assets such as JavaScript and CSS
-    config/              contains frontend configurations
-    controllers/         contains Web controller classes
-    models/              contains frontend-specific model classes
-    runtime/             contains files generated during runtime
-    tests/               contains tests for frontend application
-    views/               contains view files for the Web application
-    web/                 contains the entry script and Web resources
-    widgets/             contains frontend widgets
-vendor/                  contains dependent 3rd-party packages
-environments/            contains environment-based overrides
-```
+Mengikuti struktur standar Yii2 Advanced Template:
+
+\`\`\`
+common/         konfigurasi & model yang dipakai bersama (frontend & backend)
+console/        console commands & migration database
+frontend/       aplikasi Web untuk pengguna/pegawai
+manajemen/      aplikasi Web untuk admin/pengelola
+environments/   konfigurasi berdasarkan environment (dev/prod)
+vagrant/        konfigurasi Vagrant untuk dev environment
+\`\`\`
+
+## 🚀 Instalasi
+
+1. Clone repository:
+   \`\`\`bash
+   git clone https://github.com/noeta92/amanat-php.git
+   cd amanat-php
+   \`\`\`
+2. Install dependency via Composer:
+   \`\`\`bash
+   composer install
+   \`\`\`
+3. Inisialisasi environment (pilih \`dev\` atau \`prod\`):
+   \`\`\`bash
+   php init
+   \`\`\`
+4. Import database dari \`amanat.sql\` ke MySQL, lalu sesuaikan koneksi database di \`common/config/main-local.php\`.
+5. Jalankan migration (jika diperlukan):
+   \`\`\`bash
+   php yii migrate
+   \`\`\`
+6. **Opsional — jalankan via Docker:**
+   \`\`\`bash
+   docker-compose up -d
+   \`\`\`
+
+## 📄 Lisensi
+
+Proyek ini dilisensikan di bawah **BSD-3-Clause License**. Lihat [LICENSE.md](./LICENSE.md) untuk detail.
