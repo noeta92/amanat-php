@@ -21,10 +21,10 @@ use mdm\admin\components\Helper;
     <tr>
     <?php foreach ($model as $value): ?> 
     <tr>
-        <td> <?= ($value->namaFile !=NULL) ? $value->namaFile : "?";
+        <td> <?= ($value->namaFile !=NULL) ? Html::encode($value->namaFile) : "?";
          ?>
         <td><?php $file= $value->file; 
-                   echo $nama =  mb_strimwidth($file, 0, 50, ".."); ?></td>
+                   echo Html::encode(mb_strimwidth($file, 0, 50, "..")); ?></td>
         <td><?= Html::a('<span class="fa fa-eye"></span> Lihat', ['view-file', 'idDok'=>$value->id], ['class' => 'btn btn-sm btn-primary' , 'target'=>'_blank']); ?>
             <?php
             $buttonHapus = Html::a('<span class="fas fa-trash"></span> Hapus', ['delete-file', 'id'=>$value->id, 'idSurat'=>$value->surat_id], ['class' => 'btn btn-sm btn-link', 

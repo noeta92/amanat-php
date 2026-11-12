@@ -69,6 +69,7 @@ Thumbs.db
 
 # composer vendor dir
 /vendor
+/common/uploads/
 
 # composer itself is not needed
 composer.phar

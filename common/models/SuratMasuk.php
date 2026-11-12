@@ -40,11 +40,13 @@ class SuratMasuk extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['noSurat', 'tanggalSurat', 'statusSurat', 'kodeKlasifikasi', 'perihal', 'uraianSurat', 'timeCreated', 'asalTujuan'], 'required'],
-            [['tanggalSurat', 'tanggalTerimaKirim'], 'safe'],
-            [['statusSurat', 'kodeBidang', 'kodeKlasifikasi', 'timeDisposisi', 'jawabanDisposisi', 'timeJawaban', 'userJawab_id', 'timeCreated'], 'integer'],
+            [['noSurat', 'tanggalSurat', 'kodeKlasifikasi', 'perihal', 'uraianSurat', 'timeCreated', 'asalTujuan'], 'required'],
+            [['tanggalSurat', 'tanggalTerimaKirim'], 'date', 'format' => 'php:Y-m-d'],
+            [['statusSurat', 'kodeBidang', 'kodeKlasifikasi', 'timeDisposisi', 'timeJawaban', 'userJawab_id', 'timeCreated'], 'integer'],
+            [['statusSurat'], 'in', 'range' => [0, 1, 2, 3]],
+            [['kodeKlasifikasi'], 'exist', 'targetClass' => Klasifikasi::class, 'targetAttribute' => ['kodeKlasifikasi' => 'id']],
             [['uraianSurat', 'asalTujuan', 'isiDisposisi', 'disposisiKaban'], 'string'],
-            [['noSurat', 'perihal', 'isiDisposisi', 'disposisiKaban', 'namaTerimaKirim'], 'string', 'max' => 128],
+            [['noSurat', 'perihal', 'namaTerimaKirim'], 'string', 'max' => 128],
             
         ];
     }
@@ -97,7 +99,7 @@ class SuratMasuk extends \yii\db\ActiveRecord
 
     public function getMedias()
     {
-        return $this->hasMany(Media::className(), ['surat_id' => 'id']);
+        return $this->hasMany(Media::className(), ['surat_id' => 'id'])->andWhere(['jenisSurat' => 0]);
     }
    
     public function getMasukBidang()

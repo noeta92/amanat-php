@@ -106,16 +106,15 @@ class SuratMasukSearch extends SuratMasuk
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            //'noSurat' => $this->noSurat,
-            'statusSurat' => $this->statusSurat,
-            'kodeBidang' => $this->kodeBidang,
-            'timeJawaban' => $this->timeJawaban,
-            'userJawab_id' => $this->userJawab_id,
-            'tanggalTerimaKirim' => $this->tanggalTerimaKirim,
+            'surat_masuk_bidang.id' => $this->id,
+            'surat_masuk_bidang.statusSurat' => $this->statusSurat,
+            'surat_masuk_bidang.kodeBidang' => $this->kodeBidang,
+            'surat_masuk_bidang.timeJawaban' => $this->timeJawaban,
+            'surat_masuk_bidang.userJawab_id' => $this->userJawab_id,
+            'surat_masuk_bidang.tanggalTerimaKirim' => $this->tanggalTerimaKirim,
         ]);
 
-        $query->andFilterWhere(['like', 'jawabanDisposisi', $this->jawabanDisposisi])
+        $query->andFilterWhere(['like', 'surat_masuk_bidang.jawabanDisposisi', $this->jawabanDisposisi])
             ->andFilterWhere(['like', 'surat_masuk.kodeKlasifikasi', $this->kodeKlasifikasi])
             ->andFilterWhere(['like', 'surat_masuk_bidang.namaTerimaKirim', $this->namaTerimaKirim])
             ->andFilterWhere(['like', 'surat_masuk.tanggalSurat', $this->tanggalSurat])

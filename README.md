@@ -60,6 +60,29 @@ vagrant/        konfigurasi Vagrant untuk dev environment
 6. **Opsional — jalankan via Docker:**
    bash
    docker-compose up -d
+
+### Keamanan berkas surat masuk
+
+Berkas baru disimpan di `common/uploads/surat-masuk`, di luar document root, dan
+diakses melalui aplikasi. Pastikan direktori tersebut dapat ditulis oleh PHP,
+tidak disajikan oleh web server, dan termasuk dalam backup.
+
+**Sebelum menggunakan versi ini pada instalasi yang sudah ada**, hentikan akses
+ke aplikasi, backup berkas, lalu pindahkan berkas lama dari
+`frontend/web/dok/masuk` ke `common/uploads/surat-masuk` dengan nama yang sama.
+Jangan menimpa berkas yang sudah ada; selesaikan setiap konflik nama terlebih
+dahulu. Pastikan semua berkas lama sudah dipindahkan dan hapus salinan publiknya
+sebelum membuka aplikasi kembali.
+
+`.htaccess` disertakan sebagai perlindungan tambahan untuk Apache yang
+mengizinkannya. Pada Nginx atau server lain, konfigurasi server juga harus
+menolak akses langsung ke `/dok/masuk/`; jangan mengandalkan `.htaccess`.
+Pastikan pembatasan ini aktif dan direktori `common/uploads` tidak dapat diakses
+melalui web. Modul lain masih memerlukan peninjauan kontrol akses tersendiri.
+
+Hak akses surat masuk mengikuti izin rute RBAC yang sudah dikonfigurasi.
+Pengguna Kabid dan Keuangan hanya dapat membuka surat yang ditugaskan ke
+bidangnya; admin, Kaban, dan Super Admin tetap mengikuti izin rutenya.
    
 
 ## 📄 Lisensi dan Copyright
