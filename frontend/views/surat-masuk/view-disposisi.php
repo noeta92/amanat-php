@@ -119,7 +119,7 @@ $this->registerJs("
             
                                 if ($modelBidang != NULL) {
                                     foreach ($modelBidang as $valueBidang) {
-                                    $isiTujuan [] = $valueBidang->bidang->bidang.' '.(isset($valueBidang->namaTerimaKirim) ? '[Penerima: '.$valueBidang->namaTerimaKirim.']' : '<span class = "badge badge-danger"><i class = "fas fa-paper-plane"></i></span>');
+                                    $isiTujuan [] = Html::encode($valueBidang->bidang->bidang).' '.(isset($valueBidang->namaTerimaKirim) ? '[Penerima: '.Html::encode($valueBidang->namaTerimaKirim).']' : '<span class = "badge badge-danger"><i class = "fas fa-paper-plane"></i></span>');
                                     }
                                     return implode('<br>', $isiTujuan);
                                 } else{
@@ -149,10 +149,10 @@ $this->registerJs("
                                     $buttonLihat = Html::button('<span class="fas fa-image"></span> Lihat', ['value'=>Url::to(['surat-masuk/daftar-file','id'=> $model['id']]),'class' => 'modalButtonView btn btn-md btn-outline-primary']);
             
                                     if($media != NULL){
-                                        return $buttonLihat.$buttonTambah;
+                                        return $buttonLihat . (Helper::checkRoute('surat-masuk/upload-file') ? $buttonTambah : '');
                                     }  else {
                                       
-                                        return  '<span class="badge badge-info">Belum diunggah</span>'.' '.$buttonUnggah;
+                                        return '<span class="badge badge-info">Belum diunggah</span>' . (Helper::checkRoute('surat-masuk/upload-file') ? ' ' . $buttonUnggah : '');
                                     }
                             }
                         ],
@@ -170,7 +170,7 @@ $this->registerJs("
             <div class="card-body">
                
                 <div class='callout callout-default'>
-                 <span class="fas fa-comment"></span> <strong> Sekretaris :  </strong> <br> <?= $model->isiDisposisi?>
+                 <span class="fas fa-comment"></span> <strong> Sekretaris :  </strong> <br> <?= Html::encode($model->isiDisposisi) ?>
                  
                 <?php
                 $buttonUbah = Html::a('<span class="fas fa-edit"></span> ubah', ['surat-masuk/update-disposisi-ubah','id'=> $model->id],['class' => 'btn btn-md btn-link']);
@@ -178,7 +178,7 @@ $this->registerJs("
                 echo Helper::checkRoute('surat-masuk/update-disposisi') ? $buttonUbah : '';
                 ?>
                 <br><br>
-                <span class="fas fa-user"></span> <strong> Kepala Bappedalitbang : </strong> <p> <?= $model->disposisiKaban?> </p>
+                <span class="fas fa-user"></span> <strong> Kepala Bappedalitbang : </strong> <p> <?= Html::encode($model->disposisiKaban) ?> </p>
 
                 <?php
                 $buttonKaban = Html::button('<span class="fas fa-edit"></span> Tulis', ['value'=>Url::to(['surat-masuk/update-disposisi-kaban','id'=> $model->id]), 'class'=>'modalButtonKaban btn btn-outline-primary']);      
@@ -206,7 +206,7 @@ $this->registerJs("
                         
                         if ($modelBidang->jawabanDisposisi !=NULL) {
                             echo '<div class="callout callout-success">';
-                            echo $isi.' '.$buttonTindak;
+                            echo Html::encode($isi).' '.$buttonTindak;
                             echo '</div>';
 
                         } else {
@@ -221,8 +221,8 @@ $this->registerJs("
                     if ($modelBidang !=NULL) {
                         foreach ($modelBidang as $value) :
                             echo '<div class="callout callout-info">';
-                            echo '<strong>'.$value->bidang->bidang.'</strong> : ';
-                            echo isset($value->jawabanDisposisi) ? $value->jawabanDisposisi : '[Belum Diisi]';
+                            echo '<strong>'.Html::encode($value->bidang->bidang).'</strong> : ';
+                            echo isset($value->jawabanDisposisi) ? Html::encode($value->jawabanDisposisi) : '[Belum Diisi]';
                             echo '<br>';
                             echo '</div>';
                         endforeach;

@@ -140,11 +140,11 @@ $this->registerJs("
                             // $isiTujuan = $valueBidang->bidang->bidang.'<br><strong>'.'('.$terima.')</strong>';
                             //$isiTujuan [] = '-'.$valueBidang->bidang->bidang.' '.(isset($valueBidang->namaTerimaKirim) ? '<span class = "badge badge-success"><i class = "fas fa-check"></i></span>' : '<span class = "badge badge-danger"><i class = "fas fa-times"></i></span>');
                             if ($valueBidang->statusSurat == 0){
-                                $isiTujuan [] = $valueBidang->bidang->bidang.' '.'<span class = "badge badge-danger"><i class = "fas fa-paper-plane"></i></span>';
+                                $isiTujuan [] = Html::encode($valueBidang->bidang->bidang).' '.'<span class = "badge badge-danger"><i class = "fas fa-paper-plane"></i></span>';
                             } else if ($valueBidang->statusSurat == 1) {
-                                $isiTujuan [] = $valueBidang->bidang->bidang.' '.'<span class = "badge badge-primary"><i class = "fas fa-envelope"></i></span>';
+                                $isiTujuan [] = Html::encode($valueBidang->bidang->bidang).' '.'<span class = "badge badge-primary"><i class = "fas fa-envelope"></i></span>';
                             } else {
-                                $isiTujuan [] = $valueBidang->bidang->bidang.' '.'<span class = "badge badge-success"><i class = "fas fa-envelope-open"></i></span>';
+                                $isiTujuan [] = Html::encode($valueBidang->bidang->bidang).' '.'<span class = "badge badge-success"><i class = "fas fa-envelope-open"></i></span>';
                             }
                             }
                             return implode('<br>', $isiTujuan);

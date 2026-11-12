@@ -7,12 +7,19 @@ use common\models\search\SuratMasukBidangSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\ForbiddenHttpException;
 
 /**
  * SuratMasukBidangController implements the CRUD actions for SuratMasukBidang model.
  */
 class SuratMasukBidangController extends Controller
 {
+    public function beforeAction($action)
+    {
+        // Assignments must be managed through SuratMasukController, which enforces letter access.
+        throw new ForbiddenHttpException('Gunakan halaman surat masuk untuk mengelola disposisi.');
+    }
+
     /**
      * @inheritDoc
      */

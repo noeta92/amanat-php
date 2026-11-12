@@ -137,7 +137,7 @@ $this->registerJs("
                 'label' => 'Penerima',
                 'value' => function ($model){
 
-                    $terima = isset($model->namaTerimaKirim) ? $model->namaTerimaKirim : '<span class = "badge badge-danger"><i class = "fas fa-times"></i> Belum diterima</span>';
+                    $terima = isset($model->namaTerimaKirim) ? Html::encode($model->namaTerimaKirim) : '<span class = "badge badge-danger"><i class = "fas fa-times"></i> Belum diterima</span>';
                    
                     return $terima;
                     
@@ -149,7 +149,7 @@ $this->registerJs("
                 'label' => 'No. Surat',
                 'format'=> 'raw',
                 'value' => function ($model) {
-                    return '<strong>'.$model->noSurat0->noSurat.'</strong>';
+                    return '<strong>'.Html::encode($model->noSurat0->noSurat).'</strong>';
                 }
             ],
 

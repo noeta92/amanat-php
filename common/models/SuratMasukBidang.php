@@ -88,7 +88,7 @@ class SuratMasukBidang extends \yii\db\ActiveRecord
 
     public function getMedias()
     {
-        return $this->hasMany(Media::className(), ['surat_id' => 'noSurat']);
+        return $this->hasMany(Media::className(), ['surat_id' => 'noSurat'])->andWhere(['jenisSurat' => 0]);
     } 
 
 

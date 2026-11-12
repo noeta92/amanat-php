@@ -95,8 +95,8 @@ $pdfHeader = [
         'pager' => ['class' => \yii\bootstrap5\LinkPager::class],
         'toolbar'=> [
             ['content'=>
-                Html::a('<i class="fas fa fa-plus" aria-hidden="true"></i> Tambah Surat Masuk', ['create'],
-                ['title'=> 'Tambah Surat Masuk','class'=>'btn btn-default']).
+                (Helper::checkRoute('surat-masuk/create') ? Html::a('<i class="fas fa fa-plus" aria-hidden="true"></i> Tambah Surat Masuk', ['create'],
+                ['title'=> 'Tambah Surat Masuk','class'=>'btn btn-default']) : '').
                 Html::a('<i class="fas fa fa-sync" aria-hidden="true"></i>', [''],
                 ['data-pjax'=>1, 'class'=>'btn btn-default', 'title'=>'Reset Grid']).
                 '{toggleData}'.
@@ -205,11 +205,11 @@ $pdfHeader = [
                             // $isiTujuan = $valueBidang->bidang->bidang.'<br><strong>'.'('.$terima.')</strong>';
                             //$isiTujuan [] = '-'.$valueBidang->bidang->bidang.' '.(isset($valueBidang->namaTerimaKirim) ? '<span class = "badge badge-success"><i class = "fas fa-check"></i></span>' : '<span class = "badge badge-danger"><i class = "fas fa-times"></i></span>');
                             if ($valueBidang->statusSurat == 0){
-                                $isiTujuan [] = $valueBidang->bidang->bidang.' '.'<span class = "badge badge-danger"><i class = "fas fa-paper-plane"></i></span>';
+                                $isiTujuan [] = Html::encode($valueBidang->bidang->bidang).' '.'<span class = "badge badge-danger"><i class = "fas fa-paper-plane"></i></span>';
                             } else if ($valueBidang->statusSurat == 1) {
-                                $isiTujuan [] = $valueBidang->bidang->bidang.' '.'<span class = "badge badge-primary"><i class = "fas fa-envelope"></i></span>';
+                                $isiTujuan [] = Html::encode($valueBidang->bidang->bidang).' '.'<span class = "badge badge-primary"><i class = "fas fa-envelope"></i></span>';
                             } else {
-                                $isiTujuan [] = $valueBidang->bidang->bidang.' '.'<span class = "badge badge-success"><i class = "fas fa-envelope-open"></i></span>';
+                                $isiTujuan [] = Html::encode($valueBidang->bidang->bidang).' '.'<span class = "badge badge-success"><i class = "fas fa-envelope-open"></i></span>';
                             }
                             }
                             return implode('<br>', $isiTujuan);
@@ -236,7 +236,7 @@ $pdfHeader = [
                         $buttonUnggah = Html::button('<span class="fas fa-upload"></span> Unggah', ['value'=>Url::to(['surat-masuk/upload-file','id'=> $model['id']]),'class' => 'modalButton btn btn-md btn-primary']);
 
                         if($media == NULL) {
-                            return $buttonUnggah.'<span class="badge badge-warning"> Belum diunggah</span>';
+                            return (Helper::checkRoute('surat-masuk/upload-file') ? $buttonUnggah : '') . '<span class="badge badge-warning"> Belum diunggah</span>';
 
                         } else {
 

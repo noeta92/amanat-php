@@ -16,12 +16,112 @@ use yii\web\UploadedFile;
 use common\models\SuratMasukBidang;
 use common\models\search\SuratMasukBidangSearch;
 use kartik\mpdf\Pdf;
+use Yii;
+use yii\helpers\FileHelper;
+use yii\web\ForbiddenHttpException;
+use yii\web\ServerErrorHttpException;
 
 /**
  * SuratMasukController implements the CRUD actions for SuratMasuk model.
  */
 class SuratMasukController extends Controller
 {
+    public function beforeAction($action)
+    {
+        if (Yii::$app->user->isGuest) {
+            Yii::$app->user->loginRequired();
+            return false;
+        }
+        if (!Yii::$app->user->can('/surat-masuk/' . $action->id)
+            && !Yii::$app->user->can('/surat-masuk/*')
+            && !Yii::$app->user->can('/*')) {
+            throw new ForbiddenHttpException('Anda tidak memiliki akses ke surat masuk.');
+        }
+        return parent::beforeAction($action);
+    }
+
+    private function isDepartmentScoped()
+    {
+        $user = Yii::$app->user;
+        return !$user->can('admin') && !$user->can('Kaban') && !$user->can('Super Admin');
+    }
+
+    private function departmentId()
+    {
+        return Yii::$app->user->identity->bagian_id;
+    }
+
+    private function assertLetterAccess($model)
+    {
+        if ($this->isDepartmentScoped()
+            && (!$this->departmentId() || !$model->getMasukBidang()
+                ->andWhere(['kodeBidang' => $this->departmentId()])->exists())) {
+            throw new ForbiddenHttpException('Surat ini tidak ditugaskan ke bidang Anda.');
+        }
+    }
+
+    private function loadLetterFields($model)
+    {
+        $data = $this->request->post($model->formName(), []);
+        $model->setAttributes(array_intersect_key($data, array_flip([
+            'noSurat', 'asalTujuan', 'kodeKlasifikasi', 'perihal',
+            'tanggalSurat', 'tanggalTerimaKirim', 'uraianSurat',
+        ])));
+    }
+
+    private function saveDisposition($model, $selection, $requireDepartment)
+    {
+        $data = $this->request->post($model->formName(), []);
+        $model->setAttributes(array_intersect_key($data, array_flip(['statusSurat', 'isiDisposisi'])));
+        $data = $this->request->post($selection->formName(), []);
+        $ids = $data['kodeBidang'] ?? [];
+        if (is_array($ids)) {
+            $ids = array_values(array_filter($ids, static function ($id) {
+                return $id !== '';
+            }));
+        }
+        if (!is_array($ids) || ($requireDepartment && !$ids)) {
+            $selection->addError('kodeBidang', 'Pilih setidaknya satu bidang.');
+            return false;
+        }
+        foreach ($ids as $id) {
+            if (!is_scalar($id) || !ctype_digit((string) $id) || (int) $id <= 0) {
+                $selection->addError('kodeBidang', 'Pilihan bidang tidak valid.');
+                return false;
+            }
+        }
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if (count($ids) !== (int) Bidang::find()->where(['id' => $ids])->count()) {
+            $selection->addError('kodeBidang', 'Pilihan bidang tidak valid.');
+            return false;
+        }
+        if (!$model->validate(['statusSurat', 'isiDisposisi'])) {
+            return false;
+        }
+
+        return Yii::$app->db->transaction(function () use ($model, $ids, $selection) {
+            // Serialize assignment changes for this letter, including submissions with no changed fields.
+            Yii::$app->db->createCommand()->update('surat_masuk', ['id' => $model->id], ['id' => $model->id])->execute();
+            if (SuratMasukBidang::find()->where(['noSurat' => $model->id, 'kodeBidang' => $ids])->exists()) {
+                $selection->addError('kodeBidang', 'Bidang tersebut sudah ditugaskan.');
+                return false;
+            }
+            if (!$model->save(false, ['statusSurat', 'isiDisposisi'])) {
+                throw new ServerErrorHttpException('Gagal menyimpan disposisi.');
+            }
+            foreach ($ids as $id) {
+                $assignment = new SuratMasukBidang();
+                $assignment->statusSurat = 0;
+                $assignment->noSurat = $model->id;
+                $assignment->kodeBidang = $id;
+                if (!$assignment->save()) {
+                    throw new ServerErrorHttpException('Gagal menyimpan tujuan disposisi.');
+                }
+            }
+            return true;
+        });
+    }
+
     /**
      * @inheritDoc
      */
@@ -34,6 +134,8 @@ class SuratMasukController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'delete-masuk-bidang' => ['POST'],
+                        'delete-file' => ['POST'],
                     ],
                 ],
             ]
@@ -48,17 +150,21 @@ class SuratMasukController extends Controller
     public function actionIndex()
     {
 
-        $roles = \common\models\AuthAssignment::find()->where(['user_id' => \Yii::$app->user->getId()])->one();
-        $item_name = $roles->item_name;
-        $bidang = \common\models\User::find()->where(['id' => \Yii::$app->user->getId()])->one();
-        $kode_bidang = $bidang->bagian_id;
+        $item_name = $this->isDepartmentScoped() ? 'Kabid' : (Yii::$app->user->can('Kaban') ? 'Kaban' : 'admin');
+        $kode_bidang = $this->departmentId();
         $searchModel = new SuratMasukSearch();
         
-        if ($item_name == 'Kabid') {
+        if ($this->isDepartmentScoped()) {
 
             $dataProvider = $searchModel->searchBidang($this->request->queryParams);
-            $dataProvider->sort = ['defaultOrder' => ['id'=>SORT_DESC]];
-            $dataProvider->query->andWhere(['surat_masuk_bidang.kodeBidang' => $kode_bidang]);
+            $dataProvider->sort->attributes['id'] = [
+                'asc' => ['surat_masuk_bidang.id' => SORT_ASC],
+                'desc' => ['surat_masuk_bidang.id' => SORT_DESC],
+            ];
+            $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
+            $dataProvider->query->andWhere($kode_bidang
+                ? ['surat_masuk_bidang.kodeBidang' => $kode_bidang]
+                : '0=1');
             
             return $this->render('index-bidang', [
                 'searchModel' => $searchModel,
@@ -101,10 +207,8 @@ class SuratMasukController extends Controller
 
     public function actionViewDisposisi($id)
     {
-        $roles = \common\models\AuthAssignment::find()->where(['user_id' => \Yii::$app->user->getId()])->one();
-        $item_name = $roles->item_name;
-        $bidang = \common\models\User::find()->where(['id' => \Yii::$app->user->getId()])->one();
-        $kode_bidang = $bidang->bagian_id;
+        $item_name = $this->isDepartmentScoped() ? 'Kabid' : (Yii::$app->user->can('Kaban') ? 'Kaban' : 'admin');
+        $kode_bidang = $this->departmentId();
 
         return $this->render('view-disposisi', [
             'model' => $this->findModel($id),
@@ -141,18 +245,11 @@ class SuratMasukController extends Controller
                 });
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-
-                //$model->tanggalSurat = \Yii::$app->formatter->asDate($model->tanggalSurat, "Y-m-d");
-                //$model->tanggalTerimaKirim = \Yii::$app->formatter->asDate($model->tanggalTerimaKirim, "Y-m-d");
-   
-                $time = date("Y-m-d H:i:s");
-                $time = strtotime($time);
-
-                $model->timeCreated = $time;
-                $model->save(false);
+            $this->loadLetterFields($model);
+            $model->timeCreated = time();
+            $model->statusSurat = 0;
+            if ($model->save()) {
                 return $this->redirect(['index']);
-             
             }
         } else {
             $model->loadDefaultValues();
@@ -193,11 +290,12 @@ class SuratMasukController extends Controller
                     return  $model->klasifikasi . ' : ' .
                             $model->Keterangan;
                 });
-        if ($this->request->isPost && $model->load($this->request->post())) { 
-
-            $model->save(false);
-            return $this->redirect(['index']);
-        } 
+        if ($this->request->isPost) {
+            $this->loadLetterFields($model);
+            if ($model->save()) {
+                return $this->redirect(['index']);
+            }
+        }
 
         return $this->render('update', [
             'model' => $model,
@@ -225,24 +323,9 @@ class SuratMasukController extends Controller
                       $model->Keterangan;
           });
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model2->load($this->request->post())) { 
-
-            $model->save(false);
-            
-            $data = $model2->kodeBidang;
-
-            foreach ($data as $value) {
-
-                $model2 = new SuratMasukBidang;
-                $model2->statusSurat  = 0;
-                $model2->noSurat = $model->id;
-                $model2->kodeBidang = $value;
-                $model2->save(false);
-                
-              }
-            
+        if ($this->request->isPost && $this->saveDisposition($model, $model2, true)) {
             return $this->redirect(['view-disposisi', 'id' => $model->id]);
-        } 
+        }
 
         return $this->render('_form-disposisi', [
             'model' => $model,
@@ -278,24 +361,9 @@ class SuratMasukController extends Controller
             $bidang = ArrayHelper::map(Bidang::find()->all() , 'id', 'bidang');
         }
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model2->load($this->request->post())) { 
-            
-            $model->save(false);
-            $data = $model2->kodeBidang;
-
-            if ($data !=NULL) {
-                foreach ($data as $value) {
-                    $model2 = new SuratMasukBidang;
-                    $model2->statusSurat  = 0;
-                    $model2->noSurat = $model->id;
-                    $model2->kodeBidang = $value;
-                    $model2->save(false);
-                    
-                }
-            }
-
+        if ($this->request->isPost && $this->saveDisposition($model, $model2, false)) {
             return $this->redirect(['view-disposisi', 'id' => $model->id]);
-        } 
+        }
 
         return $this->render('_form-disposisi-ubah', [
             'model' => $model,
@@ -310,11 +378,13 @@ class SuratMasukController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post())) { 
-
-            $model->save(false);
-            return $this->redirect(['view-disposisi', 'id' => $id]);
-        } 
+        if ($this->request->isPost) {
+            $data = $this->request->post($model->formName(), []);
+            $model->disposisiKaban = $data['disposisiKaban'] ?? null;
+            if ($model->validate(['disposisiKaban']) && $model->save(false, ['disposisiKaban'])) {
+                return $this->redirect(['view-disposisi', 'id' => $id]);
+            }
+        }
 
         return $this->renderAjax('_form-kaban', [
             'model' => $model,
@@ -325,11 +395,13 @@ class SuratMasukController extends Controller
     {
         $model = $this->findModelBidang($id);
 
-        if ($this->request->isPost && $model->load($this->request->post())) { 
-
+        if ($this->request->isPost) {
+            $data = $this->request->post($model->formName(), []);
+            $model->jawabanDisposisi = $data['jawabanDisposisi'] ?? null;
             $model->statusSurat = 2;
-            $model->save(false);
-            return $this->redirect(['view-disposisi', 'id' => $model->noSurat]);
+            if ($model->validate(['jawabanDisposisi']) && $model->save(false, ['statusSurat', 'jawabanDisposisi'])) {
+                return $this->redirect(['view-disposisi', 'id' => $model->noSurat]);
+            }
         } 
 
         return $this->renderAjax('_form-tindaklanjut', [
@@ -342,11 +414,13 @@ class SuratMasukController extends Controller
     {
         $model = $this->findModelBidang($id);
 
-        if ($this->request->isPost && $model->load($this->request->post())) {
-
+        if ($this->request->isPost) {
+            $data = $this->request->post($model->formName(), []);
+            $model->namaTerimaKirim = $data['namaTerimaKirim'] ?? null;
             $model->statusSurat = 1;
-            $model->save(false);
-            return $this->redirect(['view-disposisi', 'id' => $model->noSurat]);
+            if ($model->validate(['namaTerimaKirim']) && $model->save(false, ['statusSurat', 'namaTerimaKirim'])) {
+                return $this->redirect(['view-disposisi', 'id' => $model->noSurat]);
+            }
         } 
 
         return $this->renderAjax('_form-terima', [
@@ -388,6 +462,7 @@ class SuratMasukController extends Controller
     protected function findModel($id)
     {
         if (($model = SuratMasuk::findOne(['id' => $id])) !== null) {
+            $this->assertLetterAccess($model);
             return $model;
         }
 
@@ -396,7 +471,8 @@ class SuratMasukController extends Controller
 
     protected function findModelMedia($id)
     {
-        if (($model = Media::findOne(['id' => $id])) !== null) {
+        if (($model = Media::findOne(['id' => $id, 'jenisSurat' => 0])) !== null) {
+            $this->findModel($model->surat_id);
             return $model;
         }
 
@@ -406,6 +482,10 @@ class SuratMasukController extends Controller
     protected function findModelBidang($id)
     {
         if (($model = SuratMasukBidang::findOne(['id' => $id])) !== null) {
+            $this->findModel($model->noSurat);
+            if ($this->isDepartmentScoped() && (string) $model->kodeBidang !== (string) $this->departmentId()) {
+                throw new ForbiddenHttpException('Disposisi ini bukan untuk bidang Anda.');
+            }
             return $model;
         }
 
@@ -414,7 +494,8 @@ class SuratMasukController extends Controller
 
     public function actionDaftarFile($id){
 
-        $model = Media::find()->where(['surat_id' => $id])->all();
+        $this->findModel($id);
+        $model = Media::find()->where(['surat_id' => $id, 'jenisSurat' => 0])->all();
 
         return $this->renderAjax('daftar-file', [
             'model' => $model,
@@ -423,72 +504,96 @@ class SuratMasukController extends Controller
     }
 
     public function actionUploadFile($id){
-
+        $this->findModel($id);
         $model = new Media;
-
-        $request = \Yii::$app->request;
-
-        $idUser  = \Yii::$app->user->getId();
-
-        if ($model->load($request->post())) {
-
-            $date = date('Y-m-d H:i:s');
-            
-            $image = UploadedFile::getInstance($model, 'file');
-            
-            if ($image !== null ) {
-                $image->saveAs('dok/masuk/' . $image->baseName . '.' . $image->extension);
-
-                // $model->namaDokumen = $image->baseName . $date . '.' . $image->extension;
-                $model->file = $image->baseName .'.'. $image->extension;
+        if ($this->request->isPost) {
+            $data = $this->request->post($model->formName(), []);
+            $model->namaFile = $data['namaFile'] ?? null;
+            $upload = UploadedFile::getInstance($model, 'file');
+            $model->file = $upload;
+            if ($model->validate(['namaFile', 'file'])) {
+                $directory = Yii::getAlias('@common/uploads/surat-masuk');
+                FileHelper::createDirectory($directory, 0700, true);
+                $filename = Yii::$app->security->generateRandomString(40) . '.' . strtolower($upload->extension);
+                $path = $directory . DIRECTORY_SEPARATOR . $filename;
+                if (!$upload->saveAs($path)) {
+                    throw new ServerErrorHttpException('Gagal menyimpan berkas.');
+                }
+                $model->file = $filename;
                 $model->surat_id = $id;
                 $model->jenisSurat = 0;
-                $model->type   = $image->extension;
-                $model->uploadAt = $date;
-                $model->uploadBy = $idUser;
-                $model->save(false);
-
-                if  ($model->save(false)){
-                    \Yii::$app->session->addFlash('success', 'Berhasil mengupload file.');
-                    return $this->redirect(['view-disposisi', 'id' => $model->surat_id]);
+                $model->type = strtolower($upload->extension);
+                $model->uploadAt = date('Y-m-d H:i:s');
+                $model->uploadBy = Yii::$app->user->id;
+                try {
+                    if (!$model->save(false)) {
+                        throw new ServerErrorHttpException('Gagal menyimpan data berkas.');
+                    }
+                } catch (\Throwable $e) {
+                    if (!unlink($path)) {
+                        Yii::error('Gagal menghapus berkas setelah penyimpanan data gagal: ' . $path);
+                    }
+                    throw $e;
                 }
-          }
-        } else {
-
+                Yii::$app->session->addFlash('success', 'Berhasil mengupload file.');
+                return $this->redirect(['view-disposisi', 'id' => $id]);
+            }
+        }
         return $this->renderAjax('upload-file', [
             'model' => $model
         ]);
-        }
     }
 
     public function actionViewFile($idDok) 
     {
-        $roles = \common\models\AuthAssignment::find()->where(['user_id' => \Yii::$app->user->getId()])->one();
-        $item_name = $roles->item_name;
-
-        $model = Media::find()->where(['id' => $idDok])
-                      ->one();
-
-        $filePath = '/dok/masuk/';
-        $completePath = \Yii::getAlias('@frontend/web'.$filePath.'/'.$model->file);
-
+        $model = $this->findModelMedia($idDok);
+        $completePath = $this->attachmentPath($model);
+        if (!is_file($completePath)) {
+            throw new NotFoundHttpException('Berkas tidak ditemukan.');
+        }
+        Yii::$app->response->headers->set('X-Content-Type-Options', 'nosniff');
+        Yii::$app->response->headers->set('Content-Security-Policy', 'sandbox');
         return \Yii::$app->response->sendFile($completePath, $model->file, ['inline'=>true]);
     }
     
     public function actionDeleteFile($id, $idSurat)
     {
-        $data = Media::findOne($id);
-        unlink(\Yii::$app->basePath . '/web/dok/masuk/' . $data->file);
-        $this->findModelMedia($id)->delete();
+        $data = $this->findModelMedia($id);
+        if ((string) $data->surat_id !== (string) $idSurat) {
+            throw new NotFoundHttpException('Berkas tidak ditemukan.');
+        }
+        $path = $this->attachmentPath($data);
+        Yii::$app->db->transaction(function () use ($data, $path) {
+            if ($data->delete() === false) {
+                throw new ServerErrorHttpException('Gagal menghapus data berkas.');
+            }
+            if (!Media::find()->where(['jenisSurat' => 0, 'file' => $data->file])->exists()
+                && is_file($path) && !unlink($path)) {
+                throw new ServerErrorHttpException('Gagal menghapus berkas.');
+            }
+        });
 
         \Yii::$app->session->addFlash('warning', 'Berhasil menghapus file.', null, true);
         //return $this->redirect(['surat-masuk/index']);
         return $this->redirect(['view-disposisi', 'id' => $idSurat]);
     }
 
+    private function attachmentPath($model)
+    {
+        if (!$model->file || basename($model->file) !== $model->file) {
+            throw new NotFoundHttpException('Nama berkas tidak valid.');
+        }
+        return Yii::getAlias('@common/uploads/surat-masuk') . DIRECTORY_SEPARATOR . $model->file;
+    }
+
     public function actionCetakSurat() {
 
-        $modelSurat = SuratMasuk::find()->orderBy(['id'=>SORT_DESC])->all();
+        $query = SuratMasuk::find();
+        if ($this->isDepartmentScoped()) {
+            $query->andWhere(['id' => SuratMasukBidang::find()
+                ->select('noSurat')->where(['kodeBidang' => $this->departmentId() ?: -1])]);
+        }
+        $modelSurat = $query->orderBy(['id'=>SORT_DESC])->all();
 
         $pdf = new Pdf([
             'mode' => Pdf::MODE_UTF8,

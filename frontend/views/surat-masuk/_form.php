@@ -16,6 +16,7 @@ use kartik\select2\Select2
             <div class = "row">
                 <div class="col-md-6">
                     <?php $form = ActiveForm::begin(); ?>
+                    <?= $form->errorSummary($model) ?>
                     
                     <?= $form->field($model, 'noSurat')->textInput(['maxlength' => true]) ?>
 
